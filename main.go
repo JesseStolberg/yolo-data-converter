@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
+
+const imgSz = 1025
 
 type c struct {
 	Id   int    `json:"id"`
@@ -12,8 +13,9 @@ type c struct {
 }
 
 type i struct {
-	Id       int    `json:"id"`
-	FileName string `json:"file_name"`
+	Id          int    `json:"id"`
+	FileName    string `json:"file_name"`
+	Annotations []a
 }
 
 type a struct {
@@ -33,14 +35,41 @@ func check(e error) {
 		panic(e)
 	}
 }
+func transform(annotation *a) {
+	annotation.Bbox[0] = annotation.Bbox[0] + annotation.Bbox[2]/2
+	annotation.Bbox[1] = annotation.Bbox[1] + annotation.Bbox[3]/2
+	annotation.Bbox[0] /= imgSz
+	annotation.Bbox[1] /= imgSz
+	annotation.Bbox[2] /= imgSz
+	annotation.Bbox[3] /= imgSz
+	annotation.CategoryId -= 1
+
+}
 
 func main() {
-	dat, err := os.ReadFile("C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json")
+	dat, err := os.ReadFile("C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json")
 	check(err)
 	var data jdoc
 	err = json.Unmarshal(dat, &data)
 	check(err)
-	fmt.Println(data.Images[len(data.Images)-1])
-	fmt.Println(data.Annotations[len(data.Annotations)-1])
+	for idx := range data.Categories {
+		data.Categories[idx].Id -= 1
+	}
+	j := 0
+	for _, annotation := range data.Annotations {
+		for annotation.ImageId > data.Images[j].Id {
+			j++
+		}
+		if annotation.ImageId != data.Images[j].Id {
+			panic(err)
+		}
+		transform(&annotation)
+		data.Images[j].Annotations = append(data.Images[j].Annotations, annotation)
+
+	}
+	// TODO: create file structure
+	// creat YAML file
+	// genorate annotation text files
+	// move image files (or symlink to files with new names)
 
 }
