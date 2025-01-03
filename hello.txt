@@ -1,0 +1,4 @@
+this is a text file.
+It was written in VSCode with the vim plugin.
+because I am trying to learn how to actually use vim.
+instead of being a silly nano and VSCode creature
