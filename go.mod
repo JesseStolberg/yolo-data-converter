@@ -1,3 +1,3 @@
-module JesseStolberg/docLayNet2YOLO11
+module JesseStolberg/DocLayNet2YOLO11
 
 go 1.23.4

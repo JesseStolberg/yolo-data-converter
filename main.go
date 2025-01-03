@@ -47,7 +47,7 @@ func check(e error) {
 }
 
 func main() {
-	dat, err := os.ReadFile("C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/test.json")
+	dat, err := os.ReadFile("C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json")
 	check(err)
 	var data doc
 	err = json.Unmarshal(dat, &data)
