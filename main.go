@@ -8,10 +8,8 @@ import (
 )
 
 const imgSz = 1025
-const jsonDir = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
 const imgDir = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/PNG/"
 const targetDir = "Dataset"
-const segment = "val"
 
 type class struct {
 	Id   int    `json:"id"`
@@ -48,7 +46,7 @@ func transform(a *annotation) {
 	a.CategoryId -= 1
 
 }
-func main() {
+func readAndReformat(jsonDir string, segment string) jdoc {
 	b, err := os.ReadFile(jsonDir)
 	check(err)
 	var d jdoc
@@ -69,33 +67,13 @@ func main() {
 		d.Images[j].Annotations = append(d.Images[j].Annotations, a)
 
 	}
-	err = os.MkdirAll(targetDir, 0777)
-	check(err)
-	err = os.Chdir(targetDir)
-	check(err)
-	f, err := os.Create("data.yaml")
-	check(err)
-	_, err = fmt.Fprint(f, "path: data\n")
-	check(err)
-	_, err = fmt.Fprint(f, "train:\n")
-	check(err)
-	_, err = fmt.Fprint(f, "val:\n")
-	check(err)
-	_, err = fmt.Fprint(f, "test:\n")
-	check(err)
-	_, err = fmt.Fprint(f, "names:\n")
-	check(err)
-	for _, i := range d.Categories {
-		_, err = fmt.Fprintf(f, "%d: %s\n", i.Id, i.Name)
-		check(err)
-	}
-	f.Close()
+
 	err = os.MkdirAll("data/labels/"+segment, 0777)
 	check(err)
 	err = os.MkdirAll("data/images/"+segment, 0777)
 	check(err)
 	for _, i := range d.Images {
-		f, err = os.Create("data/labels/" + segment + "/" + strings.Split(i.FileName, ".")[0] + ".txt")
+		f, err := os.Create("data/labels/" + segment + "/" + strings.Split(i.FileName, ".")[0] + ".txt")
 		check(err)
 		os.Symlink(imgDir+i.FileName, "data/images/"+segment+"/"+i.FileName)
 		for _, a := range i.Annotations {
@@ -104,4 +82,40 @@ func main() {
 		}
 		f.Close()
 	}
+	return d
+}
+func main() {
+	err := os.MkdirAll(targetDir, 0777)
+	check(err)
+	err = os.Chdir(targetDir)
+	check(err)
+	// r, _ := regexp.Compile(`([^/]+?)(?=\.)`)
+	// seg := r.FindString(jsonDir)
+	trainJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json"
+	train := "train"
+	valJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
+	val := "val"
+	testJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/test.json"
+	test := "test"
+	readAndReformat(trainJson, train)
+	readAndReformat(valJson, val)
+	d := readAndReformat(testJson, test)
+	f, err := os.Create("data.yaml")
+	check(err)
+	_, err = fmt.Fprint(f, "path: data\n")
+	check(err)
+	_, err = fmt.Fprintf(f, "train: images/%s\n", train)
+	check(err)
+	_, err = fmt.Fprintf(f, "val: images/%s\n", val)
+	check(err)
+	_, err = fmt.Fprintf(f, "test: images/%s\n", test)
+	check(err)
+	_, err = fmt.Fprint(f, "names:\n")
+	check(err)
+	for _, i := range d.Categories {
+		_, err = fmt.Fprintf(f, "    %d: %s\n", i.Id, i.Name)
+		check(err)
+	}
+	f.Close()
+
 }
