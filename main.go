@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
-	"strconv"
 	"strings"
 )
 
 const imgSz = 1025
-const filePath = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json"
+const filePath = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
 
 type class struct {
 	Id   int    `json:"id"`
@@ -75,8 +75,7 @@ func main() {
 		check(err)
 		defer f.Close()
 		for _, a := range i.Annotations {
-
-			_, err = f.WriteString(strconv.Itoa(a.CategoryId) + " " + strconv.FormatFloat(a.Bbox[0], 'f', 6, 64) + " " + strconv.FormatFloat(a.Bbox[1], 'f', 6, 64) + " " + strconv.FormatFloat(a.Bbox[2], 'f', 6, 64) + " " + strconv.FormatFloat(a.Bbox[3], 'f', 6, 64) + "\n")
+			fmt.Fprintf(f, "%d %6f %6f %6f %6f\n", a.CategoryId, a.Bbox[0], a.Bbox[1], a.Bbox[2], a.Bbox[3])
 			check(err)
 		}
 		f.Close()
