@@ -8,7 +8,10 @@ import (
 )
 
 const imgSz = 1025
-const filePath = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
+const jsonDir = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
+const imgDir = "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/PNG/"
+const targetDir = "Dataset"
+const segment = "val"
 
 type class struct {
 	Id   int    `json:"id"`
@@ -46,7 +49,7 @@ func transform(a *annotation) {
 
 }
 func main() {
-	b, err := os.ReadFile(filePath)
+	b, err := os.ReadFile(jsonDir)
 	check(err)
 	var d jdoc
 	err = json.Unmarshal(b, &d)
@@ -66,16 +69,37 @@ func main() {
 		d.Images[j].Annotations = append(d.Images[j].Annotations, a)
 
 	}
-	err = os.MkdirAll("labels/train", 0777)
+	err = os.MkdirAll(targetDir, 0777)
 	check(err)
-	err = os.Chdir("labels/train")
+	err = os.Chdir(targetDir)
+	check(err)
+	f, err := os.Create("data.yaml")
+	check(err)
+	_, err = fmt.Fprint(f, "path: data\n")
+	check(err)
+	_, err = fmt.Fprint(f, "train:\n")
+	check(err)
+	_, err = fmt.Fprint(f, "val:\n")
+	check(err)
+	_, err = fmt.Fprint(f, "test:\n")
+	check(err)
+	_, err = fmt.Fprint(f, "names:\n")
+	check(err)
+	for _, i := range d.Categories {
+		_, err = fmt.Fprintf(f, "%d: %s\n", i.Id, i.Name)
+		check(err)
+	}
+	f.Close()
+	err = os.MkdirAll("data/labels/"+segment, 0777)
+	check(err)
+	err = os.MkdirAll("data/images/"+segment, 0777)
 	check(err)
 	for _, i := range d.Images {
-		f, err := os.Create(strings.Split(i.FileName, ".")[0] + ".txt")
+		f, err = os.Create("data/labels/" + segment + "/" + strings.Split(i.FileName, ".")[0] + ".txt")
 		check(err)
-		defer f.Close()
+		os.Symlink(imgDir+i.FileName, "data/images/"+segment+"/"+i.FileName)
 		for _, a := range i.Annotations {
-			fmt.Fprintf(f, "%d %6f %6f %6f %6f\n", a.CategoryId, a.Bbox[0], a.Bbox[1], a.Bbox[2], a.Bbox[3])
+			_, err = fmt.Fprintf(f, "%d %6f %6f %6f %6f\n", a.CategoryId, a.Bbox[0], a.Bbox[1], a.Bbox[2], a.Bbox[3])
 			check(err)
 		}
 		f.Close()
