@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -89,33 +90,35 @@ func main() {
 	check(err)
 	err = os.Chdir(targetDir)
 	check(err)
-	// r, _ := regexp.Compile(`([^/]+?)(?=\.)`)
-	// seg := r.FindString(jsonDir)
-	trainJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json"
-	train := "train"
-	valJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
-	val := "val"
+
+	//trainJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/train.json"
+	//train := "train"
+	//valJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/val.json"
+	//val := "val"
 	testJson := "C:/Users/Jesse/PycharmProjects/PythonProject/DocLayNet_core/COCO/test.json"
-	test := "test"
-	readAndReformat(trainJson, train)
-	readAndReformat(valJson, val)
-	d := readAndReformat(testJson, test)
-	f, err := os.Create("data.yaml")
-	check(err)
-	_, err = fmt.Fprint(f, "path: data\n")
-	check(err)
-	_, err = fmt.Fprintf(f, "train: images/%s\n", train)
-	check(err)
-	_, err = fmt.Fprintf(f, "val: images/%s\n", val)
-	check(err)
-	_, err = fmt.Fprintf(f, "test: images/%s\n", test)
-	check(err)
-	_, err = fmt.Fprint(f, "names:\n")
-	check(err)
-	for _, i := range d.Categories {
-		_, err = fmt.Fprintf(f, "    %d: %s\n", i.Id, i.Name)
-		check(err)
-	}
-	f.Close()
+	//test := "test"
+	r, _ := regexp.Compile("([^/]+$)")
+	seg := strings.Split(r.FindString(testJson), ".")[0]
+	fmt.Println(seg)
+	//readAndReformat(trainJson, train)
+	//readAndReformat(valJson, val)
+	//d := readAndReformat(testJson, test)
+	// f, err := os.Create("data.yaml")
+	// check(err)
+	// _, err = fmt.Fprint(f, "path: data\n")
+	// check(err)
+	// _, err = fmt.Fprintf(f, "train: images/%s\n", train)
+	// check(err)
+	// _, err = fmt.Fprintf(f, "val: images/%s\n", val)
+	// check(err)
+	// _, err = fmt.Fprintf(f, "test: images/%s\n", test)
+	// check(err)
+	// _, err = fmt.Fprint(f, "names:\n")
+	// check(err)
+	// for _, i := range d.Categories {
+	// 	_, err = fmt.Fprintf(f, "    %d: %s\n", i.Id, i.Name)
+	// 	check(err)
+	// }
+	// f.Close()
 
 }
