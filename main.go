@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,7 +35,17 @@ func check(e error) {
 		panic(e)
 	}
 }
-func transform(a *annotation) {
+func Normalize(a *annotation) {
+	if a.Bbox[0] > 1025 {
+		a.Bbox[0] = 1025
+	} else if a.Bbox[0] < 0 {
+		a.Bbox[0] = 0
+	}
+	if a.Bbox[1] > 1025 {
+		a.Bbox[1] = 1025
+	} else if a.Bbox[1] < 0 {
+		a.Bbox[1] = 0
+	}
 	a.Bbox[0] = a.Bbox[0] + a.Bbox[2]/2
 	a.Bbox[1] = a.Bbox[1] + a.Bbox[3]/2
 	a.Bbox[0] /= imgSz
@@ -64,7 +75,7 @@ func readAndReformat(metadata string, imageDir string) jdoc {
 		if a.ImageId != d.Images[j].Id {
 			panic(err)
 		}
-		transform(&a)
+		Normalize(&a)
 		d.Images[j].Annotations = append(d.Images[j].Annotations, a)
 
 	}
@@ -76,7 +87,9 @@ func readAndReformat(metadata string, imageDir string) jdoc {
 	for _, i := range d.Images {
 		f, err := os.Create("data/labels/" + dir + "/" + strings.Split(i.FileName, ".")[0] + ".txt")
 		check(err)
-		os.Rename(imageDir+i.FileName, "data/images/"+dir+"/"+i.FileName)
+		target, _ := filepath.Abs(filepath.Join(imageDir, i.FileName))
+		dest, _ := filepath.Abs(filepath.Join("data/images", dir, i.FileName))
+		os.Symlink(target, dest)
 		for _, a := range i.Annotations {
 			_, err = fmt.Fprintf(f, "%d %6f %6f %6f %6f\n", a.CategoryId, a.Bbox[0], a.Bbox[1], a.Bbox[2], a.Bbox[3])
 			check(err)
@@ -86,9 +99,12 @@ func readAndReformat(metadata string, imageDir string) jdoc {
 	return d
 }
 func main() {
-	readAndReformat("doclaynet/COCO/train.json", "doclaynet/PNG/")
-	readAndReformat("doclaynet/COCO/val.json", "doclaynet/PNG/")
-	d := readAndReformat("doclaynet/COCO/test.json", "doclaynet/PNG/")
+	homeDir, _ := os.UserHomeDir()
+	pngDir := filepath.Join(homeDir, "PNG")
+
+	readAndReformat("COCO/train.json", pngDir)
+	readAndReformat("COCO/val.json", pngDir)
+	d := readAndReformat("COCO/test.json", pngDir)
 	err := os.MkdirAll("data", 0777)
 	check(err)
 	err = os.Chdir("data")
